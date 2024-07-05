@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
@@ -114,7 +115,7 @@ class SimliFlutter {
     }
   }
 
-  Future<void> lipsyncStream(
+  Future<Stream<LipsyncStreamResult>> lipsyncStream(
     String videoReferenceUrl,
     String faceDetectionResultsUrl,
     bool isJPG,
@@ -129,6 +130,7 @@ class SimliFlutter {
       'syncAudio': syncAudio,
     };
     final channel = WebSocketChannel.connect(url);
+    final controller = StreamController<LipsyncStreamResult>.broadcast();
 
     try {
       // Send the initial request as JSON
@@ -138,22 +140,53 @@ class SimliFlutter {
         // Handle incoming binary response data
         final data = message as Uint8List;
 
-        // Process the response based on syncAudio flag (decode video/audio)
-        if (syncAudio) {
-          // Process response with video and audio frames
-          // ... (implementation depends on received data format)
-          log('Received data with video and audio (implementation needed)');
-        } else {
-          // Process response with video frame only
-          // ... (implementation depends on received data format)
-          log('Received data with video frame only (implementation needed)');
+        // Process the response based on syncAudio flag
+        final result = _processData(data, isJPG, syncAudio);
+        if (result != null) {
+          controller.add(result);
         }
       });
+      return controller.stream;
     } catch (error) {
       log('Error connecting to LipsyncStream: $error');
+      controller.addError(error);
+      return controller.stream;
     } finally {
       // Close the WebSocket connection
       await channel.sink.close();
+      controller.close();
     }
   }
+
+
+  LipsyncStreamResult? _processData(
+      Uint8List data, bool isJPG, bool syncAudio) {
+    // Implement logic to parse the binary data based on the response format
+    // and extract video frame and optional audio frame.
+    // ... (replace with your implementation)
+
+    // Example (replace with actual implementation):
+    if (isJPG) {
+      // Handle JPG video frame extraction
+      return LipsyncStreamResult(data);
+    } else {
+      // Handle raw video frame and optional audio frame extraction
+      if (syncAudio) {
+        // Separate video and audio data based on format
+        final videoFrame = data.sublist(0, data.length ~/ 2);
+        final audioFrame = data.sublist(data.length ~/ 2);
+        return LipsyncStreamResult(videoFrame, audioFrame: audioFrame);
+      } else {
+        return LipsyncStreamResult(data);
+      }
+    }
+  }
+}
+
+class LipsyncStreamResult {
+  final Uint8List videoFrame; // Raw video data (may be JPG or raw bytes)
+  final Uint8List?
+      audioFrame; // Optional audio data (present only if syncAudio is true)
+
+  LipsyncStreamResult(this.videoFrame, {this.audioFrame});
 }
