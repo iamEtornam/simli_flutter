@@ -6,7 +6,7 @@ Simli lets developers create Lipsynced AI avatars. Ready to make your first one?
 ### An API with endless possibilities.
 With visual lipsynced AI avatars like our API gives you, anything is possible: mock interviews, sales assistants, language training, coaching, CS training, historical characters and so much more. [Try our demo](https://www.simli.com/demo).
 
-[alt text](Background_avatars.gif)
+<img src="Background_avatars.gif">
 
 
 ## How it works?
